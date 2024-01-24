@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState('');
   const [range, setRange] = useState('');
   const [rating, setRating] = useState('');
   const [locations, setLocations] = useState([]);
   const [dropdownOptions, setDropdownOptions] = useState([
-    'Restaurants',
+    'restaurant',
     'hospital',
     'park',
     'parking',
@@ -14,13 +16,6 @@ export default function Dashboard() {
     'cafe',
     'gas_station',
   ]);
-
-  useEffect(() => {
-    // Remove selected category from dropdown options
-    setDropdownOptions((options) =>
-      options.filter((option) => option !== selectedCategory)
-    );
-  }, [selectedCategory]);
 
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
@@ -53,6 +48,11 @@ export default function Dashboard() {
     setDropdownOptions((options) => [...options, deletedLocation.category]);
   };
 
+  const handleSubmit = () => {
+    // Pass the locations state variable to MyComponent
+    navigate('/mycomponent', { state: { locations } });
+  };
+
   return (
     <div>
       <div className="container ">
@@ -79,19 +79,9 @@ export default function Dashboard() {
           </div>
           <div className="col-sm">
             <div className="input-group mb-3">
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Range"
-                aria-label="Recipient's username"
-                aria-describedby="basic-addon2"
-                value={range}
-                onChange={(e) => setRange(e.target.value)}
-              />
+              <input type="text" className="form-control" placeholder="Range" aria-label="Recipient's username" aria-describedby="basic-addon2" value={range} onChange={(e) => setRange(e.target.value)}/>
               <div className="input-group-append">
-                <span className="input-group-text" id="basic-addon2">
-                  In Kms.
-                </span>
+                <span className="input-group-text" id="basic-addon2"> In Kms. </span>
               </div>
             </div>
           </div>
@@ -107,13 +97,7 @@ export default function Dashboard() {
             />
           </div>
           <div className="col-sm">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleAddLocation}
-            >
-              Add
-            </button>
+            <button type="button" className="btn btn-primary" onClick={handleAddLocation} >  Add  </button>
           </div>
         </div>
       </div>
@@ -132,7 +116,7 @@ export default function Dashboard() {
         </div>
       </div>
       <div className="container">
-        <button type="button" className="btn btn-dark">
+      <button type="button" className="btn btn-dark" onClick={handleSubmit}>
           Submit
         </button>
       </div>

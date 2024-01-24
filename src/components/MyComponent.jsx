@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 const containerStyle = {
   width: '80vw',
@@ -18,13 +19,17 @@ const renderMarkers = (locations, onClickCallback) => {
   ));
 };
 function MyComponent() {
+  const location = useLocation();
+  const submittedData = location.state?.locations || [];
+  console.log("s------->",submittedData)
+  
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk" 
   });
 
   const [map, setMap] = useState(null);
-  const [restaurants, setRestaurants] = useState([]);
+  const [restaurant, setRestaurants] = useState([]);
   const [gyms, setGyms] = useState([]);
   const [park, setParks] = useState([]);
   const [hospital, setHospitals] = useState([]);
@@ -72,12 +77,20 @@ function MyComponent() {
           const userLat = position.coords.latitude;
           const userLng = position.coords.longitude;
           setUserLocation({ lat: userLat, lng: userLng });
+
+          //ITERATING OVER SUBMITTED DATA AND CALLING fetchNearbyLocations
+          submittedData.forEach(element => {
+            console.log("category is :",element.category);
+            console.log("range is :",element.range*1000);
+            console.log("rating is :",element.rating)
+            fetchNearbyLocations({lat: userLat, lng: userLng},element.range*1000, element.category)
+          });
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
           // fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'gyms')
           // fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'restaurant')
-          fetchNearbyLocations({lat: userLat, lng: userLng},3000, 'hospital')
+          // fetchNearbyLocations({lat: userLat, lng: userLng},3000, 'hospital')
         },
         (error) => {
           console.error('Error getting user location:', error);
@@ -116,7 +129,7 @@ function MyComponent() {
       onLoad={onLoad}
       onUnmount={onUnmount}
     >
-      {renderMarkers(restaurants, handleMarkerClick)}
+      {renderMarkers(restaurant, handleMarkerClick)}
       {renderMarkers(gyms, handleMarkerClick)}
       {renderMarkers(park, handleMarkerClick)}
       {renderMarkers(hospital, handleMarkerClick)}
