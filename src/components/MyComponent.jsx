@@ -4,11 +4,23 @@ const containerStyle = {
   width: '80vw',
   height: '80vh'
 };
-
+const renderMarkers = (locations, onClickCallback) => {
+  return locations.map((location) => (
+    <Marker
+      key={location.place_id}
+      position={{
+        lat: location.geometry.location.lat,
+        lng: location.geometry.location.lng,
+      }}
+      // if(locations)
+      onClick={() => onClickCallback(location)}
+    />
+  ));
+};
 function MyComponent() {
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
-    googleMapsApiKey: "AIzaSyCEDPL.....lzgYpec8Yk" 
+    googleMapsApiKey: "AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk" 
   });
 
   const [map, setMap] = useState(null);
@@ -26,7 +38,7 @@ function MyComponent() {
   const fetchNearbyLocations = async (location, radius, keyword) => {
     try{
       const response = await fetch (
-        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaS.....nzoNW0y_gzmk`
+        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
         )
         const data = await response.json();
         console.log(`Fetched locations of type ${keyword} -->>`,data);
@@ -48,35 +60,10 @@ function MyComponent() {
           setGas_stations(data.results);
         }
       }catch(error){
-        console.log('Error fetching nearby location')
+        console.log('Error fetching nearby location make sure you have started server.js')
       }
 
   }
-  // const fetchNearbyRestaurants = async (location) => {
-  //   try {
-  //     const response = await fetch(
-  //       `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=5000&keyword=restaurant&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
-  //     );
-  //     const data = await response.json();
-  //     console.log('Fetched restaurant data:', data);
-  //     setRestaurants(data.results);
-  //   } catch (error) {
-  //     console.error('Error fetching nearby restaurants:', error);
-  //   }
-  // };
-
-  // const fetchNearbyGyms = async (location) => {
-  //   try {
-  //     const response = await fetch(
-  //       `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=2000&keyword=gym&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
-  //     );
-  //     const data = await response.json();
-  //     console.log('Fetched gym data:', data);
-  //     setGyms(data.results);
-  //   } catch (error) {
-  //     console.error('Error fetching nearby gyms:', error);
-  //   }
-  // };
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -88,19 +75,9 @@ function MyComponent() {
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'gyms')
-          // fetchNearbyRestaurants({ lat: userLat, lng: userLng });
-          // fetchNearbyGyms({ lat: userLat, lng: userLng });
+          // fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'gyms')
+          // fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'restaurant')
+          fetchNearbyLocations({lat: userLat, lng: userLng},3000, 'hospital')
         },
         (error) => {
           console.error('Error getting user location:', error);
@@ -121,7 +98,7 @@ function MyComponent() {
   }, []);
 
   useEffect(() => {
-    // Fetch nearby restaurants and gyms when the component mounts
+    // Fetch nearby locations when the component mounts
     if (isLoaded) {
       getUserLocation();
     }
@@ -139,27 +116,15 @@ function MyComponent() {
       onLoad={onLoad}
       onUnmount={onUnmount}
     >
-      {restaurants.map((restaurant) => (
-        <Marker
-          key={restaurant.place_id}
-          position={{
-            lat: restaurant.geometry.location.lat,
-            lng: restaurant.geometry.location.lng,
-          }}
-          onClick={() => handleMarkerClick(restaurant)}
-        />
-      ))}
-
-      {gyms.map((gym) => (
-        <Marker
-          key={gym.place_id}
-          position={{
-            lat: gym.geometry.location.lat,
-            lng: gym.geometry.location.lng,
-          }}
-          onClick={() => handleMarkerClick(gym)}
-        />
-      ))}
+      {renderMarkers(restaurants, handleMarkerClick)}
+      {renderMarkers(gyms, handleMarkerClick)}
+      {renderMarkers(park, handleMarkerClick)}
+      {renderMarkers(hospital, handleMarkerClick)}
+      {renderMarkers(parking, handleMarkerClick)}
+      {renderMarkers(cafe, handleMarkerClick)}
+      {renderMarkers(shopping_mall, handleMarkerClick)}
+      {renderMarkers(gas_station, handleMarkerClick)}
+      
       {userLocation && (
         <Marker
           position={userLocation}
@@ -182,8 +147,10 @@ function MyComponent() {
           
             <div style={{ fontSize: '10px', maxWidth: '100px' }}>
       <h3 style={{ fontSize: '13px', margin: '0 0 1px' }}>{selectedMarker.name}</h3>
-      {/* <img src={selectedMarker.icon} alt="" style={{ maxWidth: '50%', marginBottom: '5px' }} /> */}
+      <div className="temp" style={{display:'flex'}}>
+      {/* <img src={selectedMarker.icon} alt="" style={{ width: '20%',height:'20%', marginBottom: '5px' }} /> */}
       <p>{selectedMarker.vicinity}</p>
+      </div>
       {/* <p>IsOpen? : {selectedMarker.opening_hours.open_now}</p> */}
       <p>Rating : {selectedMarker.rating}</p>
           </div>
