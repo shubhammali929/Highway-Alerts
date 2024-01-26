@@ -54,7 +54,8 @@ export default function Dashboard() {
   };
 
   return (
-    <div>
+    <div className="Dashboard">
+      <div className='Dashboard-main'>
       <div className="container ">
         <h1>Welcome to Highway Alerts</h1>
       </div>
@@ -121,5 +122,7 @@ export default function Dashboard() {
         </button>
       </div>
     </div>
+    </div>
+    
   );
 }

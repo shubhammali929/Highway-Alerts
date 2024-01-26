@@ -41,6 +41,16 @@ function MyComponent() {
   const [selectedMarker, setSelectedMarker] = useState(null);
 
   const fetchNearbyLocations = async (location, radius, keyword) => {
+    const categoryToIcon = {
+      restaurant: 'https://cdn-icons-png.flaticon.com/128/5695/5695138.png',
+      gyms: 'https://cdn-icons-png.flaticon.com/128/5695/5695172.png',
+      park: 'https://cdn-icons-png.flaticon.com/128/12348/12348378.png',
+      hospital: 'https://cdn-icons-png.flaticon.com/128/4314/4314279.png',
+      parking: 'https://cdn-icons-png.flaticon.com/128/2634/2634162.png',
+      cafe: 'https://cdn-icons-png.flaticon.com/128/1183/1183374.png',
+      shopping_mall: 'https://cdn-icons-png.flaticon.com/128/4287/4287689.png',
+      gas_station: 'https://cdn-icons-png.flaticon.com/128/9922/9922079.png',
+    };
     try{
       const response = await fetch (
         `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
