@@ -5,18 +5,36 @@ const containerStyle = {
   width: '80vw',
   height: '80vh'
 };
-const renderMarkers = (locations, onClickCallback) => {
-  return locations.map((location) => (
+const renderMarkers = (locationQueue, onClickCallback) => {
+  return locationQueue.map((location) => (
     <Marker
-      key={location.place_id}
+      key={location.name}
       position={{
         lat: location.geometry.location.lat,
         lng: location.geometry.location.lng,
       }}
-      // if(locations)
       onClick={() => onClickCallback(location)}
     />
   ));
+};
+// Helper function to calculate distance between two points
+const calculateDistance = (point1, point2) => {
+  const lat1 = point1.lat;
+  const lon1 = point1.lng;
+  const lat2 = point2.lat;
+  const lon2 = point2.lng;
+
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = R * c; // Distance in kilometers
+
+  return distance;
 };
 function MyComponent() {
   const location = useLocation();
@@ -29,6 +47,7 @@ function MyComponent() {
   });
 
   const [map, setMap] = useState(null);
+  const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
   const [restaurant, setRestaurants] = useState([]);
   const [gyms, setGyms] = useState([]);
   const [park, setParks] = useState([]);
@@ -74,6 +93,19 @@ function MyComponent() {
         } else if (keyword === 'gas_station') {
           setGas_stations(data.results);
         }
+
+        // Update the locationQueue with the new locations
+      setLocationQueue((prevQueue) => [
+        ...prevQueue,
+        ...data.results
+          .filter((result) => result.geometry && result.geometry.location)
+          .map((result) => ({
+            name: result.name,
+            distance: calculateDistance(location, result.geometry.location),
+            rating: result.rating || 'N/A',
+            geometry: result.geometry,
+          })),
+      ]);
       }catch(error){
         console.log('Error fetching nearby location make sure you have started server.js')
       }
@@ -130,6 +162,12 @@ function MyComponent() {
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
   };
+
+
+  useEffect(() => {
+    console.log("Location Queue:", locationQueue);
+  }, [locationQueue]);
+
 
   return isLoaded ? (
     <GoogleMap
