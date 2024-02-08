@@ -5,6 +5,24 @@ const containerStyle = {
   width: '80vw',
   height: '80vh'
 };
+function convertToSpeech(text ) {
+  
+  // Check if the browser supports the SpeechSynthesis API
+  if ('speechSynthesis' in window) {
+    const synth = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    // Optional: You can configure additional properties of the utterance here
+    // For example: utterance.rate = 1.5; // Adjust the speed
+
+    // Speak the text
+    synth.speak(utterance);
+  } else {
+    alert('Your browser does not support the SpeechSynthesis API.');
+  }
+}
+
+
 const renderMarkers = (locationQueue, onClickCallback) => {
   return locationQueue.map((location) => (
     <Marker
@@ -39,7 +57,7 @@ const calculateDistance = (point1, point2) => {
 function MyComponent() {
   const location = useLocation();
   const submittedData = location.state?.locations || [];
-  console.log("s------->",submittedData)
+  // console.log("s------->",submittedData)
   
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -59,23 +77,60 @@ function MyComponent() {
   const [userLocation, setUserLocation] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
 
+
+  useEffect(() => {
+    // console.log("Location Queue:", locationQueue);
+    // After logging, process the locationQueue
+    processLocationQueue();
+  }, [locationQueue]);
+  
+  const processLocationQueue = () => {
+    if (locationQueue.length > 0) {
+      const { name, distance, rating } = locationQueue[0];
+      console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating}`);
+      convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
+      
+  
+      // Optionally, you can call the text-to-speech function here
+      // Example: textToSpeech(`There is ${name} at the distance of ${distance} km having a rating of ${rating}`);
+  
+      // Remove the processed location from the queue
+      setLocationQueue((prevQueue) => prevQueue.slice(1));
+    }
+  };
+
+
+
   const fetchNearbyLocations = async (location, radius, keyword) => {
-    const categoryToIcon = {
-      restaurant: 'https://cdn-icons-png.flaticon.com/128/5695/5695138.png',
-      gyms: 'https://cdn-icons-png.flaticon.com/128/5695/5695172.png',
-      park: 'https://cdn-icons-png.flaticon.com/128/12348/12348378.png',
-      hospital: 'https://cdn-icons-png.flaticon.com/128/4314/4314279.png',
-      parking: 'https://cdn-icons-png.flaticon.com/128/2634/2634162.png',
-      cafe: 'https://cdn-icons-png.flaticon.com/128/1183/1183374.png',
-      shopping_mall: 'https://cdn-icons-png.flaticon.com/128/4287/4287689.png',
-      gas_station: 'https://cdn-icons-png.flaticon.com/128/9922/9922079.png',
-    };
+    // const categoryToIcon = {
+    //   restaurant: 'https://cdn-icons-png.flaticon.com/128/5695/5695138.png',
+    //   gyms: 'https://cdn-icons-png.flaticon.com/128/5695/5695172.png',
+    //   park: 'https://cdn-icons-png.flaticon.com/128/12348/12348378.png',
+    //   hospital: 'https://cdn-icons-png.flaticon.com/128/4314/4314279.png',
+    //   parking: 'https://cdn-icons-png.flaticon.com/128/2634/2634162.png',
+    //   cafe: 'https://cdn-icons-png.flaticon.com/128/1183/1183374.png',
+    //   shopping_mall: 'https://cdn-icons-png.flaticon.com/128/4287/4287689.png',
+    //   gas_station: 'https://cdn-icons-png.flaticon.com/128/9922/9922079.png',
+    // };
     try{
       const response = await fetch (
         `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
         )
         const data = await response.json();
         console.log(`Fetched locations of type ${keyword} -->>`,data);
+
+
+        // Filter out locations that are already in the locationQueue
+    const newLocations = data.results.filter((result) => {
+      const newLocationKey = `${result.geometry.location.lat}-${result.geometry.location.lng}`;
+      return !locationQueue.some(
+        (existingLocation) =>
+          `${existingLocation.geometry.location.lat}-${existingLocation.geometry.location.lng}` === newLocationKey
+      );
+    });
+
+
+
         if(keyword === 'restaurant') {
           setRestaurants(data.results);
         } else if (keyword === 'gyms') {
@@ -122,9 +177,9 @@ function MyComponent() {
 
           //ITERATING OVER SUBMITTED DATA AND CALLING fetchNearbyLocations
           submittedData.forEach(element => {
-            console.log("category is :",element.category);
-            console.log("range is :",element.range*1000);
-            console.log("rating is :",element.rating)
+            // console.log("category is :",element.category);
+            // console.log("range is :",element.range*1000);
+            // console.log("rating is :",element.rating)
             fetchNearbyLocations({lat: userLat, lng: userLng},element.range*1000, element.category)
           });
           //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
@@ -164,9 +219,7 @@ function MyComponent() {
   };
 
 
-  useEffect(() => {
-    console.log("Location Queue:", locationQueue);
-  }, [locationQueue]);
+  
 
 
   return isLoaded ? (
