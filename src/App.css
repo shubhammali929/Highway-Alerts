@@ -1,0 +1,63 @@
+.row{
+    flex-wrap:nowrap;
+    display: flex;
+}
+.Dashboard{
+    overflow-x: hidden;
+}
+.flex-h{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.v-flex{
+    display: flex;
+    flex-direction: column;
+}
+.Dashboard {
+  display: flex;
+  flex-direction: column;
+}
+.Dashboard .main{
+    background-color: #ffffff58;
+    padding: 20px;
+    border-radius: 30px;
+}
+.row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.user-input{
+    padding: 20px;
+}
+.user-input input, select{
+    margin-top: 10px;
+    border-radius: 20px;
+    padding: 5px;
+    border: none;
+}
+.add{
+    background-color: rgb(39, 255, 248);
+    color: white;
+    padding: 10px;
+    margin: 10px 30px;
+    border-radius: 30px;
+    outline: none;
+    border: none;
+}
+.added-locations {
+  /* display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px; */
+}
+
+.added-location {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 10px;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
+/* Add any additional styling as needed */

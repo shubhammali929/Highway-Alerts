@@ -54,75 +54,41 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="Dashboard">
-      <div className='Dashboard-main'>
-      <div className="container ">
-        <h1>Welcome to Highway Alerts</h1>
-      </div>
-      <div className="container border border-dark rounded pt-3">
-        <div className="row">
-          <div className="col-sm">
-            <div className="dropdown">
-              <select
-                name="category"
-                id="category"
-                onChange={handleCategoryChange}
-                value={selectedCategory}
-              >
-                <option value="">Select Category</option>
-                {dropdownOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="col-sm">
-            <div className="input-group mb-3">
-              <input type="text" className="form-control" placeholder="Range" aria-label="Recipient's username" aria-describedby="basic-addon2" value={range} onChange={(e) => setRange(e.target.value)}/>
-              <div className="input-group-append">
-                <span className="input-group-text" id="basic-addon2"> In Kms. </span>
-              </div>
-            </div>
-          </div>
-          <div className="col-sm">
-            <input
-              type="text"
-              className="form-control"
-              id="exampleInputEmail1"
-              aria-describedby="emailHelp"
-              placeholder="Enter rating 0-5"
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
-            />
-          </div>
-          <div className="col-sm">
-            <button type="button" className="btn btn-primary" onClick={handleAddLocation} >  Add  </button>
-          </div>
-        </div>
-      </div>
-      <div className="container">
-        <div className="container border">
-          {locations.map((location, index) => (
-            <div className="row" key={index}>
-              <div className="col-sm">{location.category}</div>
-              <div className="col-sm">{location.range}</div>
-              <div className="col-sm">{location.rating}</div>
-              <div className="col-sm">
-                <button type="button" className="btn btn-danger" onClick={() => handleDeleteLocation(index)}>  Delete </button>
-              </div>
-            </div>
+    <div className="Dashboard v-flex"> 
+      <div className="main">
+      <div className="v-flex user-input">
+        <select name="category" id="category" onChange={handleCategoryChange} value={selectedCategory}>
+          <option value="">Select Category</option>
+          {dropdownOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
           ))}
-        </div>
+        </select>
+        <input type="text" className="" placeholder="Range" value={range} onChange={(e) => setRange(e.target.value)}/>
+        <input type="text" className="" id="" placeholder="Enter rating 0-5" value={rating} onChange={(e) => setRating(e.target.value)}/>
+        <button type="button" className="add" onClick={handleAddLocation}> Add </button>
+      </div>
+      
+      <div className="v-flex added-locations">
+        {locations.map((location, index) => (
+          <div className="added-location" key={index}>
+            <div>{location.category}</div>
+            <div>{location.range}</div>
+            <div>{location.rating}</div>
+            <div>
+              <button type="button" className="btn btn-danger" onClick={() => handleDeleteLocation(index)}> Delete </button>
+            </div>
+          </div>
+          
+        ))}
       </div>
       <div className="container">
-      <button type="button" className="btn btn-dark" onClick={handleSubmit}>
+      <button type="button" className="" onClick={handleSubmit}>
           Submit
         </button>
       </div>
+      </div>
     </div>
-    </div>
-    
   );
 }
