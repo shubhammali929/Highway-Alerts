@@ -101,7 +101,7 @@ function MyComponent() {
 
 
 
-  const fetchNearbyLocations = async (location, radius, keyword) => {
+  const fetchNearbyLocations = async (location, radius, keyword, rating) => {
     // const categoryToIcon = {
     //   restaurant: 'https://cdn-icons-png.flaticon.com/128/5695/5695138.png',
     //   gyms: 'https://cdn-icons-png.flaticon.com/128/5695/5695172.png',
@@ -153,7 +153,7 @@ function MyComponent() {
       setLocationQueue((prevQueue) => [
         ...prevQueue,
         ...data.results
-          .filter((result) => result.geometry && result.geometry.location)
+          .filter((result) => result.geometry && result.geometry.location && result.rating >= rating)
           .map((result) => ({
             name: result.name,
             distance: calculateDistance(location, result.geometry.location),
@@ -180,14 +180,8 @@ function MyComponent() {
             // console.log("category is :",element.category);
             // console.log("range is :",element.range*1000);
             // console.log("rating is :",element.rating)
-            fetchNearbyLocations({lat: userLat, lng: userLng},element.range*1000, element.category)
+            fetchNearbyLocations({lat: userLat, lng: userLng},element.range*1000, element.category,element.rating)
           });
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          //----------------------------------------------------------------get locations from here-----------------------------------------------------------------------------
-          // fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'gyms')
-          // fetchNearbyLocations({lat: userLat, lng: userLng},2000, 'restaurant')
-          // fetchNearbyLocations({lat: userLat, lng: userLng},3000, 'hospital')
         },
         (error) => {
           console.error('Error getting user location:', error);
@@ -218,10 +212,6 @@ function MyComponent() {
     setSelectedMarker(marker);
   };
 
-
-  
-
-
   return isLoaded ? (
     <GoogleMap
       mapContainerStyle={containerStyle}
@@ -243,7 +233,6 @@ function MyComponent() {
         <Marker
           position={userLocation}
           icon={{
-            // url: 'https://cdn-icons-png.flaticon.com/128/7509/7509212.png', // Change the URL to your desired marker icon
             url: 'https://cdn-icons-png.flaticon.com/128/1783/1783356.png',
             scaledSize: new window.google.maps.Size(30, 30),
           }}

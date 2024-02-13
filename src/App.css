@@ -1,3 +1,49 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+.submit{
+  background-color: rgb(13,111,252);
+  margin-top: 10px !important;
+  padding: 10px;
+  color: white;
+  border-radius: 5px;
+  border: none;
+  font-size: bold;
+}
+.delete{
+  background-color: rgb(220,52,68);
+  color: white;
+  border: none;
+  border-radius: 10%;
+  padding: 5px;
+}
+.Dashboard{
+  background-color: black;
+  height: 100vh;
+  background-image: url('../public/highwayAlertBg1.jpg');
+  background-size: cover;
+  background-position: center;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.Dashboard-main{
+  background-color: rgba(255, 255, 255, 0.372);
+  width: fit-content;
+  border-radius: 30px;
+  padding: 30px;
+}
 .row{
     flex-wrap:nowrap;
     display: flex;
@@ -33,18 +79,20 @@
 }
 .user-input input, select{
     margin-top: 10px;
-    border-radius: 20px;
-    padding: 5px;
+    border-radius: 7px;
+    padding: 10px;
     border: none;
 }
 .add{
-    background-color: rgb(39, 255, 248);
-    color: white;
-    padding: 10px;
-    margin: 10px 30px;
-    border-radius: 30px;
-    outline: none;
-    border: none;
+  width: 30%;
+  background-color: rgb(13,202,240);
+  color: white;
+  padding: 10px;
+  border-radius: 20px;
+  outline: none;
+  border: none;
+  margin: 1cqmin auto;
+
 }
 .added-locations {
   /* display: grid;
