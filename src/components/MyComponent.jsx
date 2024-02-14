@@ -10,10 +10,9 @@ function convertToSpeech(text ) {
     if ('speechSynthesis' in window) {// Check if the browser supports the SpeechSynthesis API
       const synth = window.speechSynthesis;
       const utterance = new SpeechSynthesisUtterance(text);
-      // console.log(speechSynthesis.getVoices())
       utterance.voice = window.speechSynthesis.getVoices()[1]; // You can get available voices using window.speechSynthesis.getVoices()
       utterance.rate = 1.2; // Adjust the speed
-      // utterance.pitch = 1.2;
+      utterance.pitch = 1.2; 
       synth.speak(utterance);// Speak the text
     } else {
       alert('Your browser does not support the SpeechSynthesis API.');
@@ -21,20 +20,9 @@ function convertToSpeech(text ) {
 }
 
 
-const renderMarkers = (locationQueue, onClickCallback) => {
-  return locationQueue.map((location) => (
-    <Marker
-      key={location.name}
-      position={{
-        lat: location.geometry.location.lat,
-        lng: location.geometry.location.lng,
-      }}
-      onClick={() => onClickCallback(location)}
-    />
-  ));
-};
-// Helper function to calculate distance between two points
-const calculateDistance = (point1, point2) => {
+
+
+const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
   const lat1 = point1.lat;
   const lon1 = point1.lng;
   const lat2 = point2.lat;
@@ -52,14 +40,35 @@ const calculateDistance = (point1, point2) => {
 
   return distance;
 };
+
 function MyComponent() {
   const location = useLocation();
   const submittedData = location.state?.locations || [];
-  // console.log("s------->",submittedData)
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk" 
   });
+
+  const renderMarkers = (locations, onClickCallback) => {
+  
+    return locations.map((location) => {
+      // Find the corresponding submitted data for this location
+      const matchingData = submittedData.find((data) => data.category === location.types[0]);  
+      // Add a condition to check if the rating is greater than or equal to matchingData.rating
+      return matchingData && location.rating >= matchingData.rating && (
+        <Marker
+          key={location.name}
+          position={{
+            lat: location.geometry.location.lat,
+            lng: location.geometry.location.lng,
+          }}
+          onClick={() => onClickCallback(location)}
+        />
+      );
+    });
+  };
+  
+  
 
   const [map, setMap] = useState(null);
   const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
@@ -76,18 +85,15 @@ function MyComponent() {
 
 
   useEffect(() => {
-    // console.log("Location Queue:", locationQueue);
-    // After logging, process the locationQueue
     processLocationQueue();
   }, [locationQueue]);
   
   const processLocationQueue = () => {
     if (locationQueue.length > 0) {
       const { name, distance, rating } = locationQueue[0];
-      console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating}`);
+      console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
-      // Remove the processed location from the queue
-      setLocationQueue((prevQueue) => prevQueue.slice(1));
+      setLocationQueue((prevQueue) => prevQueue.slice(1));// Remove the processed location from the queue
     }
   };
 
@@ -99,7 +105,7 @@ function MyComponent() {
         const data = await response.json();
         console.log(`Fetched locations of type ${keyword} -->>`,data);
         // Filter out locations that are already in the locationQueue
-    const newLocations = data.results.filter((result) => {
+      const newLocations = data.results.filter((result) => {
       const newLocationKey = `${result.geometry.location.lat}-${result.geometry.location.lng}`;
       return !locationQueue.some(
         (existingLocation) =>
@@ -150,7 +156,6 @@ function MyComponent() {
           const userLat = position.coords.latitude;
           const userLng = position.coords.longitude;
           setUserLocation({ lat: userLat, lng: userLng });
-          
           submittedData.forEach(element => {//ITERATING OVER SUBMITTED DATA AND CALLING fetchNearbyLocations
             fetchNearbyLocations({lat: userLat, lng: userLng},element.range*1000, element.category,element.rating)
           });
@@ -169,13 +174,6 @@ function MyComponent() {
   const onUnmount = React.useCallback(function callback(map) {
     setMap(null);
   }, []);
-
-  useEffect(() => {
-    // Fetch nearby locations when the component mounts
-    if (isLoaded) {
-      getUserLocation();
-    }
-  }, [isLoaded]);
 
   const handleMarkerClick = (marker) => {
     setSelectedMarker(marker);
