@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
+import Animation from './Animation';
 const containerStyle = {
   width: '80vw',
   height: '80vh'
@@ -14,13 +15,11 @@ function convertToSpeech(text ) {
       utterance.rate = 1.2; // Adjust the speed
       utterance.pitch = 1.2; 
       synth.speak(utterance);// Speak the text
+      
     } else {
       alert('Your browser does not support the SpeechSynthesis API.');
     }
 }
-
-
-
 
 const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
   const lat1 = point1.lat;
@@ -82,6 +81,7 @@ function MyComponent() {
   const [gas_station, setGas_stations] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
+  const [animation, setAnimation] = useState(null);
 
 
   useEffect(() => {
@@ -93,6 +93,7 @@ function MyComponent() {
       const { name, distance, rating } = locationQueue[0];
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
+      setAnimation('speaking');
       setLocationQueue((prevQueue) => prevQueue.slice(1));// Remove the processed location from the queue
     }
   };
@@ -100,18 +101,10 @@ function MyComponent() {
   const fetchNearbyLocations = async (location, radius, keyword, rating) => {
     try{
       const response = await fetch (
-        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
+        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk22`
         )
         const data = await response.json();
         console.log(`Fetched locations of type ${keyword} -->>`,data);
-        // Filter out locations that are already in the locationQueue
-      const newLocations = data.results.filter((result) => {
-      const newLocationKey = `${result.geometry.location.lat}-${result.geometry.location.lng}`;
-      return !locationQueue.some(
-        (existingLocation) =>
-          `${existingLocation.geometry.location.lat}-${existingLocation.geometry.location.lng}` === newLocationKey
-      );
-    });
 
         if(keyword === 'restaurant') {
           setRestaurants(data.results);
@@ -180,6 +173,7 @@ function MyComponent() {
   };
 
   return isLoaded ? (
+    <>
     <GoogleMap
       mapContainerStyle={containerStyle}
       center={userLocation || { lat: -3.745, lng: -38.523 }}
@@ -214,7 +208,7 @@ function MyComponent() {
           }}
           onCloseClick={() => setSelectedMarker(null)}
         >
-            <div style={{ fontSize: '10px', maxWidth: '100px' }}>
+      <div style={{ fontSize: '10px', maxWidth: '100px' }}>
       <h3 style={{ fontSize: '13px', margin: '0 0 1px' }}>{selectedMarker.name}</h3>
       <div className="temp" style={{display:'flex'}}>
       <img src={selectedMarker.icon} alt="" style={{ width: '20%',height:'20%', marginBottom: '5px' }} />
@@ -225,6 +219,9 @@ function MyComponent() {
         </InfoWindow>
       )}
     </GoogleMap>
+    <Animation Animation="speaking"/>
+    <h1>hello</h1>
+    </>
   ) : <></>;
 }
 export default React.memo(MyComponent);

@@ -76,17 +76,13 @@ export default function Dashboard() {
             <div>{location.category}</div>
             <div>{location.range}</div>
             <div>{location.rating}</div>
-            <div>
-              <button type="button" className="delete" onClick={() => handleDeleteLocation(index)}> Delete </button>
-            </div>
+            <div><button type="button" className="delete" onClick={() => handleDeleteLocation(index)}> Delete </button></div>
           </div>
           
         ))}
       </div>
       <div className="container">
-      <button type="button" className="submit" onClick={handleSubmit}>
-          Submit
-        </button>
+        <button type="button" className="submit" onClick={handleSubmit}>Submit</button>
       </div>
       </div>
     </div>
