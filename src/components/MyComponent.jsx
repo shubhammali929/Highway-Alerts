@@ -44,7 +44,7 @@ function MyComponent() {
   const [animation, setAnimation] = useState(null);
   const [speechInputText, setSpeechInputText] = useState('');
 
-  
+
   const location = useLocation();
   const submittedData = location.state?.locations || [];
   const { isLoaded } = useJsApiLoader({
@@ -60,13 +60,13 @@ function MyComponent() {
       utterance.voice = window.speechSynthesis.getVoices()[1];
       utterance.rate = 1.2;
       utterance.pitch = 1.2;
-  
+
       // Event listener for the start of speech
       utterance.onstart = () => {
         console.log('Speech started');
         setAnimation('speaking');
       };
-  
+
       // Event listener for the end of speech
       utterance.onend = () => {
         console.log('Speech ended');
@@ -74,13 +74,19 @@ function MyComponent() {
         if (onEndCallback && typeof onEndCallback === 'function') {
           onEndCallback(); // Call the provided onEndCallback if it's a function
         }
+        // Call listenToUser after speech ends
+        listenToUser().then(() => {
+          // Continue processing location queue
+          processLocationQueue();
+        });
       };
-  
+
       synth.speak(utterance);
     } else {
       alert('Your browser does not support the SpeechSynthesis API.');
     }
   };
+
 
   const listenToUser = async () => {
     return new Promise((resolve, reject) => {
@@ -141,9 +147,6 @@ function MyComponent() {
     });
   };
   
-  
-
-
   useEffect(() => {
     processLocationQueue();
   }, [locationQueue]);
@@ -155,7 +158,7 @@ function MyComponent() {
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       setAnimation('speaking');
-      setLocationQueue((prevQueue) => prevQueue.slice(1));// Remove the processed location from the queue
+      setLocationQueue((prevQueue) => prevQueue.slice(1)); // Remove the processed location from the queue
     }
   };
 
@@ -281,7 +284,7 @@ function MyComponent() {
       )}
     </GoogleMap>
     <Animation Animation={animation}/>
-    <h1>hello</h1>
+    <h1>{speechInputText || 'hello'}</h1>
     </>
   ) : <></>;
 }
