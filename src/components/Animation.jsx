@@ -1,16 +1,13 @@
-import React from 'react'
-export default function Animation(props) {
-  if(props.Animation === 'Speaking'){
-    return(
-      <h1>Speaking</h1>
-    )
-  }else if(props.Animation === 'listening'){
-    return(
-      <h1>Listening</h1>
-    )
-  }else {
-    return(
-        <h1>Nothing</h1>
-    )
-  }
-}
+import React from 'react';
+
+const Animation = (props) => {
+  return (
+    <div>
+      {props.Animation === 'speaking' && <div><img src={`${process.env.PUBLIC_URL}/speaking.gif`} alt="" /></div>}
+      {props.Animation === 'listening' && <div><img src={`${process.env.PUBLIC_URL}/listening.gif`} alt="" /></div>}
+      {props.Animation === null && <div>Nothing to display</div>}
+    </div>
+  );
+};
+
+export default Animation;

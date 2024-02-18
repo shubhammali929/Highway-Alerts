@@ -7,19 +7,7 @@ const containerStyle = {
   height: '80vh'
 };
 
-function convertToSpeech(text ) {
-    if ('speechSynthesis' in window) {// Check if the browser supports the SpeechSynthesis API
-      const synth = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.voice = window.speechSynthesis.getVoices()[1]; // You can get available voices using window.speechSynthesis.getVoices()
-      utterance.rate = 1.2; // Adjust the speed
-      utterance.pitch = 1.2; 
-      synth.speak(utterance);// Speak the text
-      
-    } else {
-      alert('Your browser does not support the SpeechSynthesis API.');
-    }
-}
+
 
 const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
   const lat1 = point1.lat;
@@ -41,12 +29,98 @@ const calculateDistance = (point1, point2) => {// Helper function to calculate d
 };
 
 function MyComponent() {
+  const [map, setMap] = useState(null);
+  const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
+  const [restaurant, setRestaurants] = useState([]);
+  const [gyms, setGyms] = useState([]);
+  const [park, setParks] = useState([]);
+  const [hospital, setHospitals] = useState([]);
+  const [parking, setParkings] = useState([]);
+  const [cafe, setCafes] = useState([]);
+  const [shopping_mall, setShopping_malls] = useState([]);
+  const [gas_station, setGas_stations] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [selectedMarker, setSelectedMarker] = useState(null);
+  const [animation, setAnimation] = useState(null);
+  const [speechInputText, setSpeechInputText] = useState('');
+
+  
   const location = useLocation();
   const submittedData = location.state?.locations || [];
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk" 
   });
+
+
+  const convertToSpeech = (text, onEndCallback) => {
+    if ('speechSynthesis' in window) {
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = window.speechSynthesis.getVoices()[1];
+      utterance.rate = 1.2;
+      utterance.pitch = 1.2;
+  
+      // Event listener for the start of speech
+      utterance.onstart = () => {
+        console.log('Speech started');
+        setAnimation('speaking');
+      };
+  
+      // Event listener for the end of speech
+      utterance.onend = () => {
+        console.log('Speech ended');
+        setAnimation(null);
+        if (onEndCallback && typeof onEndCallback === 'function') {
+          onEndCallback(); // Call the provided onEndCallback if it's a function
+        }
+      };
+  
+      synth.speak(utterance);
+    } else {
+      alert('Your browser does not support the SpeechSynthesis API.');
+    }
+  };
+
+  const listenToUser = async () => {
+    return new Promise((resolve, reject) => {
+      if ('webkitSpeechRecognition' in window) {
+        const recognition = new window.webkitSpeechRecognition();
+
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        recognition.onstart = () => {
+          console.log('Listening...');
+        };
+
+        recognition.onresult = (event) => {
+          const result = event.results[0][0].transcript;
+          console.log('Result:', result);
+          setSpeechInputText(result); // Store the listened text in state
+          resolve(result);
+        };
+
+        recognition.onerror = (event) => {
+          console.error('Speech Recognition Error:', event.error);
+          reject(event.error);
+        };
+
+        recognition.onend = () => {
+          console.log('Stopped listening.');
+        };
+
+        // Start listening for 3 seconds
+        recognition.start();
+        setTimeout(() => {
+          recognition.stop();
+        }, 3000);
+      } else {
+        console.error('Speech Recognition API is not supported in this browser.');
+        reject('Speech Recognition API is not supported.');
+      }
+    });
+  };
 
   const renderMarkers = (locations, onClickCallback) => {
   
@@ -69,24 +143,11 @@ function MyComponent() {
   
   
 
-  const [map, setMap] = useState(null);
-  const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
-  const [restaurant, setRestaurants] = useState([]);
-  const [gyms, setGyms] = useState([]);
-  const [park, setParks] = useState([]);
-  const [hospital, setHospitals] = useState([]);
-  const [parking, setParkings] = useState([]);
-  const [cafe, setCafes] = useState([]);
-  const [shopping_mall, setShopping_malls] = useState([]);
-  const [gas_station, setGas_stations] = useState([]);
-  const [userLocation, setUserLocation] = useState(null);
-  const [selectedMarker, setSelectedMarker] = useState(null);
-  const [animation, setAnimation] = useState(null);
-
 
   useEffect(() => {
     processLocationQueue();
   }, [locationQueue]);
+
   
   const processLocationQueue = () => {
     if (locationQueue.length > 0) {
@@ -101,7 +162,7 @@ function MyComponent() {
   const fetchNearbyLocations = async (location, radius, keyword, rating) => {
     try{
       const response = await fetch (
-        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk22`
+        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
         )
         const data = await response.json();
         console.log(`Fetched locations of type ${keyword} -->>`,data);
@@ -219,7 +280,7 @@ function MyComponent() {
         </InfoWindow>
       )}
     </GoogleMap>
-    <Animation Animation="speaking"/>
+    <Animation Animation={animation}/>
     <h1>hello</h1>
     </>
   ) : <></>;
