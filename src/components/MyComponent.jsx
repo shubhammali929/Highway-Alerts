@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import Animation from './Animation';
+import { useSpeechRecognition } from 'react-speech-recognition';
+
+
 const containerStyle = {
   width: '80vw',
   height: '80vh'
@@ -43,6 +46,14 @@ function MyComponent() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [animation, setAnimation] = useState(null);
   const [speechInputText, setSpeechInputText] = useState('');
+  const {
+    listen,
+    listening,
+    stopListening,
+    supported,
+  } = useSpeechRecognition();
+  
+
 
 
   const location = useLocation();
@@ -53,80 +64,51 @@ function MyComponent() {
   });
 
 
-  const convertToSpeech = (text, onEndCallback) => {
-    if ('speechSynthesis' in window) {
-      const synth = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.voice = window.speechSynthesis.getVoices()[1];
-      utterance.rate = 1.2;
-      utterance.pitch = 1.2;
-
-      // Event listener for the start of speech
-      utterance.onstart = () => {
-        console.log('Speech started');
-        setAnimation('speaking');
-      };
-
-      // Event listener for the end of speech
-      utterance.onend = () => {
-        console.log('Speech ended');
-        setAnimation(null);
-        if (onEndCallback && typeof onEndCallback === 'function') {
-          onEndCallback(); // Call the provided onEndCallback if it's a function
-        }
-        // Call listenToUser after speech ends
-        listenToUser().then(() => {
-          // Continue processing location queue
-          processLocationQueue();
-        });
-      };
-
-      synth.speak(utterance);
-    } else {
-      alert('Your browser does not support the SpeechSynthesis API.');
-    }
+  const convertToSpeech = (text) => {
+    // Simulate speech synthesis
+    setAnimation('speaking');
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.voice = window.speechSynthesis.getVoices()[1];
+  
+    utterance.onend = () => {
+      setAnimation(null);
+      // After "speaking", listen to the user
+      listenToUser();
+    };
+  
+    window.speechSynthesis.speak(utterance);
   };
-
-
-  const listenToUser = async () => {
-    return new Promise((resolve, reject) => {
-      if ('webkitSpeechRecognition' in window) {
-        const recognition = new window.webkitSpeechRecognition();
-
-        recognition.continuous = false;
-        recognition.interimResults = false;
-
-        recognition.onstart = () => {
-          console.log('Listening...');
-        };
-
-        recognition.onresult = (event) => {
-          const result = event.results[0][0].transcript;
+  
+  
+  const listenToUser = () => {
+    // Check if speech recognition is supported
+    if (supported && !listening) {
+      // Start listening to the user
+      listen({
+        onResult: (result) => {
           console.log('Result:', result);
           setSpeechInputText(result); // Store the listened text in state
-          resolve(result);
-        };
-
-        recognition.onerror = (event) => {
-          console.error('Speech Recognition Error:', event.error);
-          reject(event.error);
-        };
-
-        recognition.onend = () => {
+          stopListening(); // Stop listening after receiving the result
+        },
+        onStart: () => {
+          console.log('Listening...');
+        },
+        onEnd: () => {
           console.log('Stopped listening.');
-        };
-
-        // Start listening for 3 seconds
-        recognition.start();
-        setTimeout(() => {
-          recognition.stop();
-        }, 3000);
-      } else {
-        console.error('Speech Recognition API is not supported in this browser.');
-        reject('Speech Recognition API is not supported.');
-      }
-    });
+          console.log("----->",speechInputText);
+          // Continue processing the location queue or perform any other desired actions
+          processLocationQueue();
+        },
+      });
+    }else{
+      console.log("NOT SUPPORT")
+    }
   };
+  
+  
+
+
+  
 
   const renderMarkers = (locations, onClickCallback) => {
   
