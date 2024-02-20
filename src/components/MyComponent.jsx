@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import Animation from './Animation';
-import { useSpeechRecognition } from 'react-speech-recognition';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 
 const containerStyle = {
@@ -32,6 +32,7 @@ const calculateDistance = (point1, point2) => {// Helper function to calculate d
 };
 
 function MyComponent() {
+  const { transcript, resetTranscript } = useSpeechRecognition();
   const [map, setMap] = useState(null);
   const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
   const [restaurant, setRestaurants] = useState([]);
@@ -46,12 +47,7 @@ function MyComponent() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [animation, setAnimation] = useState(null);
   const [speechInputText, setSpeechInputText] = useState('');
-  const {
-    listen,
-    listening,
-    stopListening,
-    supported,
-  } = useSpeechRecognition();
+  
   
 
 
@@ -79,37 +75,21 @@ function MyComponent() {
     window.speechSynthesis.speak(utterance);
   };
   
-  
   const listenToUser = () => {
-    // Check if speech recognition is supported
-    if (supported && !listening) {
-      // Start listening to the user
-      listen({
-        onResult: (result) => {
-          console.log('Result:', result);
-          setSpeechInputText(result); // Store the listened text in state
-          stopListening(); // Stop listening after receiving the result
-        },
-        onStart: () => {
-          console.log('Listening...');
-        },
-        onEnd: () => {
-          console.log('Stopped listening.');
-          console.log("----->",speechInputText);
-          // Continue processing the location queue or perform any other desired actions
-          processLocationQueue();
-        },
-      });
-    }else{
-      console.log("NOT SUPPORT")
-    }
+    setAnimation("listening");
+    SpeechRecognition.startListening({ continuous: true });
+    console.log('Listening starts');
+  
+    setTimeout(() => {
+      SpeechRecognition.stopListening();
+      console.log('Listening stops');
+      console.log('Spoken Text:', transcript);
+      setSpeechInputText(transcript)
+      setAnimation(null);
+    }, 5000);
   };
   
   
-
-
-  
-
   const renderMarkers = (locations, onClickCallback) => {
   
     return locations.map((location) => {
