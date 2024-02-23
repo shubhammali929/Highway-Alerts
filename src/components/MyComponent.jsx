@@ -6,8 +6,10 @@ import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognitio
 
 
 const containerStyle = {
-  width: '80vw',
-  height: '80vh'
+  width: '90vw',
+  height: '75vh',
+  borderRadius: '20px',
+  border:'2px solid gray'
 };
 
 
@@ -32,7 +34,7 @@ const calculateDistance = (point1, point2) => {// Helper function to calculate d
 };
 
 function MyComponent() {
-  const { transcript, resetTranscript } = useSpeechRecognition();
+  const { transcript, browserSupportsSpeechRecognition , resetTranscript } = useSpeechRecognition();
   const [map, setMap] = useState(null);
   const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
   const [restaurant, setRestaurants] = useState([]);
@@ -50,7 +52,19 @@ function MyComponent() {
   
   
 
-
+  useEffect(() => {
+    SpeechRecognition.onstart = () => console.log('Speech recognition started');
+    SpeechRecognition.onend = () => console.log('Speech recognition ended');
+    SpeechRecognition.onresult = (result) => console.log('Speech recognition result:', result);
+  
+    // Cleanup function
+    return () => {
+      SpeechRecognition.onstart = null;
+      SpeechRecognition.onend = null;
+      SpeechRecognition.onresult = null;
+    };
+  }, [animation]);
+  
 
   const location = useLocation();
   const submittedData = location.state?.locations || [];
@@ -76,8 +90,11 @@ function MyComponent() {
   };
   
   const listenToUser = () => {
+    if(!browserSupportsSpeechRecognition){
+      console.log("YOUR BROWSER DOES NOT SUPPORT SPEECH RECognition")
+    }
     setAnimation("listening");
-    SpeechRecognition.startListening({ continuous: true });
+    SpeechRecognition.startListening({ continuous: true, language: 'en-IN' });
     console.log('Listening starts');
   
     setTimeout(() => {
@@ -199,55 +216,71 @@ function MyComponent() {
   };
 
   return isLoaded ? (
-    <>
-    <GoogleMap
-      mapContainerStyle={containerStyle}
-      center={userLocation || { lat: -3.745, lng: -38.523 }}
-      zoom={14}
-      onLoad={onLoad}
-      onUnmount={onUnmount}
-    >
-      {renderMarkers(restaurant, handleMarkerClick)}
-      {renderMarkers(gyms, handleMarkerClick)}
-      {renderMarkers(park, handleMarkerClick)}
-      {renderMarkers(hospital, handleMarkerClick)}
-      {renderMarkers(parking, handleMarkerClick)}
-      {renderMarkers(cafe, handleMarkerClick)}
-      {renderMarkers(shopping_mall, handleMarkerClick)}
-      {renderMarkers(gas_station, handleMarkerClick)}
-      
-      {userLocation && (
-        <Marker
-          position={userLocation}
-          icon={{
-            url: 'https://cdn-icons-png.flaticon.com/128/1783/1783356.png',
-            scaledSize: new window.google.maps.Size(30, 30),
-          }}
-        />
-      )}
-
-      {selectedMarker && (
-        <InfoWindow
-          position={{
-            lat: selectedMarker.geometry.location.lat,
-            lng: selectedMarker.geometry.location.lng,
-          }}
-          onCloseClick={() => setSelectedMarker(null)}
-        >
-      <div style={{ fontSize: '10px', maxWidth: '100px' }}>
-      <h3 style={{ fontSize: '13px', margin: '0 0 1px' }}>{selectedMarker.name}</h3>
-      <div className="temp" style={{display:'flex'}}>
-      <img src={selectedMarker.icon} alt="" style={{ width: '20%',height:'20%', marginBottom: '5px' }} />
-      <p>{selectedMarker.vicinity}</p>
+    <div className='map'>
+      <div className="heading">
+        Welcome To Highway Alerts
       </div>
-      <p>Rating : {selectedMarker.rating}</p>
-          </div>
-        </InfoWindow>
-      )}
-    </GoogleMap>
-    <Animation Animation={animation}/>
-    <h1>{speechInputText || 'hello'}</h1>
-    </>
+      <GoogleMap
+        mapContainerStyle={containerStyle}
+        center={userLocation || { lat: -3.745, lng: -38.523 }}
+        zoom={14}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
+      >
+        {renderMarkers(restaurant, handleMarkerClick)}
+        {renderMarkers(gyms, handleMarkerClick)}
+        {renderMarkers(park, handleMarkerClick)}
+        {renderMarkers(hospital, handleMarkerClick)}
+        {renderMarkers(parking, handleMarkerClick)}
+        {renderMarkers(cafe, handleMarkerClick)}
+        {renderMarkers(shopping_mall, handleMarkerClick)}
+        {renderMarkers(gas_station, handleMarkerClick)}
+        
+        {userLocation && (
+          <Marker
+            position={userLocation}
+            icon={{
+              url: 'https://cdn-icons-png.flaticon.com/128/1783/1783356.png',
+              scaledSize: new window.google.maps.Size(30, 30),
+            }}
+          />
+        )}
+
+        {selectedMarker && (
+          <InfoWindow
+            position={{
+              lat: selectedMarker.geometry.location.lat,
+              lng: selectedMarker.geometry.location.lng,
+            }}
+            onCloseClick={() => setSelectedMarker(null)}
+          >
+        <div style={{ fontSize: '10px', maxWidth: '100px' }}>
+        <h3 style={{ fontSize: '13px', margin: '0 0 1px' }}>{selectedMarker.name}</h3>
+        <div className="temp" style={{display:'flex'}}>
+        <img src={selectedMarker.icon} alt="" style={{ width: '20%',height:'20%', marginBottom: '5px' }} />
+        <p>{selectedMarker.vicinity}</p>
+        </div>
+        <p>Rating : {selectedMarker.rating}</p>
+            </div>
+          </InfoWindow>
+        )}
+      </GoogleMap>
+      <div className="bottom">
+        <div className="vertical">
+        <img src="https://cdn-icons-png.flaticon.com/128/12320/12320298.png" alt="" />
+        <img src="https://cdn-icons-png.flaticon.com/128/9068/9068771.png" alt="" />
+        </div>
+        <Animation Animation={animation}/>
+        <div className="vertical">
+        <div className="count">
+        <img src="https://cdn-icons-png.flaticon.com/128/4457/4457168.png" alt="" />
+        <p>21</p>
+        </div>
+        <img src="https://cdn-icons-png.flaticon.com/128/10152/10152161.png" alt="" />
+      
+        </div>
+        </div>
+    </div>
   ) : <></>;
 }
 export default React.memo(MyComponent);
