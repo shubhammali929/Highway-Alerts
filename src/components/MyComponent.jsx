@@ -3,6 +3,10 @@ import { useLocation } from 'react-router-dom';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import Animation from './Animation';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import SpeechRecognitionComponent from './SpeechRecognitionComponent';
+// import { AdvancedMarkerElement } from '@googlemaps/marker'; 
+// import { AdvancedMarkerElement } from '@react-google-maps/api';
+
 
 
 const containerStyle = {
@@ -49,22 +53,9 @@ function MyComponent() {
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [animation, setAnimation] = useState(null);
   const [speechInputText, setSpeechInputText] = useState('');
-  
-  
+  const [isListening, setIsListening] = useState(false); 
+ const [isProcessingNextLocation, setIsProcessingNextLocation] = useState(false);
 
-  useEffect(() => {
-    SpeechRecognition.onstart = () => console.log('Speech recognition started');
-    SpeechRecognition.onend = () => console.log('Speech recognition ended');
-    SpeechRecognition.onresult = (result) => console.log('Speech recognition result:', result);
-  
-    // Cleanup function
-    return () => {
-      SpeechRecognition.onstart = null;
-      SpeechRecognition.onend = null;
-      SpeechRecognition.onresult = null;
-    };
-  }, [animation]);
-  
 
   const location = useLocation();
   const submittedData = location.state?.locations || [];
@@ -74,37 +65,47 @@ function MyComponent() {
   });
 
 
-  const convertToSpeech = (text) => {
-    // Simulate speech synthesis
-    setAnimation('speaking');
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.voice = window.speechSynthesis.getVoices()[1];
-  
-    utterance.onend = () => {
-      setAnimation(null);
-      // After "speaking", listen to the user
-      listenToUser();
-    };
-  
-    window.speechSynthesis.speak(utterance);
+  const convertToSpeech = async (text) => {
+    return new Promise((resolve) => {
+      console.log('convertToSpeech start');
+      setAnimation('speaking');
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = window.speechSynthesis.getVoices()[1];
+
+      utterance.onend = () => {
+        console.log('convertToSpeech end');
+        setAnimation(null);
+        resolve(); // Resolve the promise
+      };
+
+      window.speechSynthesis.speak(utterance);
+    });
+  };
+
+  const listenToUser = async () => {
+    return new Promise((resolve) => {
+      console.log('listenToUser start');
+      if (!browserSupportsSpeechRecognition) {
+        console.log("YOUR BROWSER DOES NOT SUPPORT SPEECH RECOGNITION");
+        resolve(); // Resolve the promise
+        return;
+      }
+
+      setAnimation('listening');
+      SpeechRecognition.startListening({ continuous: true, language: 'en-IN' });
+      console.log('Listening starts');
+
+      setTimeout(() => {
+        SpeechRecognition.stopListening();
+        console.log('Listening stops');
+        console.log('Spoken Text:', transcript);
+        setSpeechInputText(transcript);
+        setAnimation(null);
+        resolve(); // Resolve the promise
+      }, 5000);
+    });
   };
   
-  const listenToUser = () => {
-    if(!browserSupportsSpeechRecognition){
-      console.log("YOUR BROWSER DOES NOT SUPPORT SPEECH RECognition")
-    }
-    setAnimation("listening");
-    SpeechRecognition.startListening({ continuous: true, language: 'en-IN' });
-    console.log('Listening starts');
-  
-    setTimeout(() => {
-      SpeechRecognition.stopListening();
-      console.log('Listening stops');
-      console.log('Spoken Text:', transcript);
-      setSpeechInputText(transcript)
-      setAnimation(null);
-    }, 5000);
-  };
   
   
   const renderMarkers = (locations, onClickCallback) => {
@@ -128,16 +129,18 @@ function MyComponent() {
   
   useEffect(() => {
     processLocationQueue();
-  }, [locationQueue]);
+  }, [locationQueue, isProcessingNextLocation]);
 
   
-  const processLocationQueue = () => {
+
+  const processLocationQueue = async () => {
     if (locationQueue.length > 0) {
       const { name, distance, rating } = locationQueue[0];
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
-      convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
-      setAnimation('speaking');
-      setLocationQueue((prevQueue) => prevQueue.slice(1)); // Remove the processed location from the queue
+      await convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars, do you want to add this location to your map?`);
+      await listenToUser();
+      setLocationQueue((prevQueue) => prevQueue.slice(1));
+      setIsProcessingNextLocation(true);
     }
   };
 
@@ -265,6 +268,7 @@ function MyComponent() {
           </InfoWindow>
         )}
       </GoogleMap>
+      <SpeechRecognitionComponent/>
       <div className="bottom">
         <div className="vertical">
         <img src="https://cdn-icons-png.flaticon.com/128/12320/12320298.png" alt="" />

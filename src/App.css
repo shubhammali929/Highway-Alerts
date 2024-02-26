@@ -158,8 +158,8 @@ code {
 
 .count p {
   position: absolute;
-  top: 5px; /* Adjust the top position as needed */
-  right: 10px; /* Adjust the right position as needed */
+  top: 3px; /* Adjust the top position as needed */
+  right: 8px; /* Adjust the right position as needed */
   color: white; /* Set the text color */
   background-color: rgb(228,54,57);
   border-radius: 50%;
