@@ -77,7 +77,6 @@ function MyComponent() {
         setAnimation(null);
         resolve(); // Resolve the promise
       };
-
       window.speechSynthesis.speak(utterance);
     });
   };
@@ -90,21 +89,42 @@ function MyComponent() {
         resolve(); // Resolve the promise
         return;
       }
-
+  
       setAnimation('listening');
       SpeechRecognition.startListening({ continuous: true, language: 'en-IN' });
       console.log('Listening starts');
-
-      setTimeout(() => {
+  
+      // Reset transcript before listening to a new input
+      resetTranscript();
+  
+      const listeningTimeout = setTimeout(() => {
         SpeechRecognition.stopListening();
         console.log('Listening stops');
-        console.log('Spoken Text:', transcript);
+  
+        // Use the transcript to update speechInputText after stopping listening
         setSpeechInputText(transcript);
+        console.log('Spoken Text:', transcript);
+  
+        // Reset transcript to an empty string after capturing the spoken text
+        resetTranscript();
+  
         setAnimation(null);
         resolve(); // Resolve the promise
       }, 5000);
+  
+      // Add an event listener for SpeechRecognition.onEnd to handle unexpected stops
+      SpeechRecognition.onEnd = () => {
+        console.log('Listening ended unexpectedly');
+        clearTimeout(listeningTimeout); // Clear the timeout
+        setAnimation(null);
+        resolve(); // Resolve the promise
+      };
     });
   };
+  
+
+  
+  
   
   
   
