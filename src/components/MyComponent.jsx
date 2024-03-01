@@ -4,10 +4,7 @@ import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-map
 import Animation from './Animation';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import SpeechRecognitionComponent from './SpeechRecognitionComponent';
-// import { AdvancedMarkerElement } from '@googlemaps/marker'; 
-// import { AdvancedMarkerElement } from '@react-google-maps/api';
-
-
+import { useMyContext } from '../context/MyContext';
 
 const containerStyle = {
   width: '90vw',
@@ -16,62 +13,23 @@ const containerStyle = {
   border:'2px solid gray'
 };
 
-
-
-const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
-  const lat1 = point1.lat;
-  const lon1 = point1.lng;
-  const lat2 = point2.lat;
-  const lon2 = point2.lng;
-
-  const R = 6371; // Radius of the Earth in kilometers
-  const dLat = (lat2 - lat1) * (Math.PI / 180);
-  const dLon = (lon2 - lon1) * (Math.PI / 180);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distance in kilometers
-
-  return distance;
-};
-
 function MyComponent() {
-  const { transcript, browserSupportsSpeechRecognition , resetTranscript } = useSpeechRecognition();
-  const [map, setMap] = useState(null);
-  const [locationQueue, setLocationQueue] = useState([]); // Queue to store locations
-  const [restaurant, setRestaurants] = useState([]);
-  const [gyms, setGyms] = useState([]);
-  const [park, setParks] = useState([]);
-  const [hospital, setHospitals] = useState([]);
-  const [parking, setParkings] = useState([]);
-  const [cafe, setCafes] = useState([]);
-  const [shopping_mall, setShopping_malls] = useState([]);
-  const [gas_station, setGas_stations] = useState([]);
-  const [userLocation, setUserLocation] = useState(null);
-  const [selectedMarker, setSelectedMarker] = useState(null);
-  const [animation, setAnimation] = useState(null);
-  const [speechInputText, setSpeechInputText] = useState('');
-  const [isListening, setIsListening] = useState(false); 
- const [isProcessingNextLocation, setIsProcessingNextLocation] = useState(false);
-
-
+  const {map,setMap,locationQueue,setLocationQueue,restaurant,setRestaurants,gyms,setGyms,park,setParks,hospital, setHospitals, parking, setParkings, cafe, setCafes, shopping_mall, setShopping_malls, gas_station, setGas_stations, userLocation,setUserLocation,selectedMarker,setSelectedMarker,animation,setAnimation,speechInputText,setSpeechInputText,isListening,setIsListening,isProcessingNextLocation,setIsProcessingNextLocation} = useMyContext();
+  const { transcript, browserSupportsSpeechRecognition , resetTranscript } = useSpeechRecognition();  
   const location = useLocation();
   const submittedData = location.state?.locations || [];
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: "AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk" 
   });
-
-
+  
   const convertToSpeech = async (text) => {
     return new Promise((resolve) => {
       console.log('convertToSpeech start');
       setAnimation('speaking');
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.voice = window.speechSynthesis.getVoices()[1];
-
+      
       utterance.onend = () => {
         console.log('convertToSpeech end');
         setAnimation(null);
@@ -80,7 +38,7 @@ function MyComponent() {
       window.speechSynthesis.speak(utterance);
     });
   };
-
+  
   const listenToUser = async () => {
     return new Promise((resolve) => {
       console.log('listenToUser start');
@@ -95,7 +53,7 @@ function MyComponent() {
       console.log('Listening starts');
   
       // Reset transcript before listening to a new input
-      resetTranscript();
+      // resetTranscript();
   
       const listeningTimeout = setTimeout(() => {
         SpeechRecognition.stopListening();
@@ -104,7 +62,7 @@ function MyComponent() {
         // Use the transcript to update speechInputText after stopping listening
         setSpeechInputText(transcript);
         console.log('Spoken Text:', transcript);
-  
+        
         // Reset transcript to an empty string after capturing the spoken text
         resetTranscript();
   
@@ -121,12 +79,6 @@ function MyComponent() {
       };
     });
   };
-  
-
-  
-  
-  
-  
   
   const renderMarkers = (locations, onClickCallback) => {
   
@@ -150,9 +102,7 @@ function MyComponent() {
   useEffect(() => {
     processLocationQueue();
   }, [locationQueue, isProcessingNextLocation]);
-
   
-
   const processLocationQueue = async () => {
     if (locationQueue.length > 0) {
       const { name, distance, rating } = locationQueue[0];
@@ -162,6 +112,25 @@ function MyComponent() {
       setLocationQueue((prevQueue) => prevQueue.slice(1));
       setIsProcessingNextLocation(true);
     }
+  };
+  
+  const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
+    const lat1 = point1.lat;
+    const lon1 = point1.lng;
+    const lat2 = point2.lat;
+    const lon2 = point2.lng;
+  
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distance = R * c; // Distance in kilometers
+  
+    return distance;
   };
 
   const fetchNearbyLocations = async (location, radius, keyword, rating) => {
@@ -189,7 +158,7 @@ function MyComponent() {
         } else if (keyword === 'gas_station') {
           setGas_stations(data.results);
         }
-
+        
         // Update the locationQueue with the new locations
       setLocationQueue((prevQueue) => [
         ...prevQueue,
@@ -307,4 +276,5 @@ function MyComponent() {
     </div>
   ) : <></>;
 }
+
 export default React.memo(MyComponent);
