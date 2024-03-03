@@ -12,8 +12,7 @@ const containerStyle = {
 };
 
 function MyComponent() {
-  const { map, setMap, locationQueue, setLocationQueue, restaurant, setRestaurants, gyms, setGyms, park, setParks, hospital, setHospitals, parking, setParkings, cafe, setCafes, shopping_mall, setShopping_malls, gas_station, setGas_stations, userLocation, setUserLocation, selectedMarker, setSelectedMarker, animation, setAnimation, speechInputText, setSpeechInputText, isListening, setIsListening, isProcessingNextLocation, setIsProcessingNextLocation } = useMyContext();
-  // const { transcript, browserSupportsSpeechRecognition, resetTranscript } = useSpeechRecognition();
+  const { map, setMap, locationQueue, setLocationQueue, restaurant, setRestaurants, gyms, setGyms, park, setParks, hospital, setHospitals, parking, setParkings, cafe, setCafes, shopping_mall, setShopping_malls, gas_station, setGas_stations, userLocation, setUserLocation, selectedMarker, setSelectedMarker, animation, setAnimation, speechInputText, setSpeechInputText,  isProcessingNextLocation, setIsProcessingNextLocation, currLocationName,setCurrLocationName } = useMyContext();
   const location = useLocation();
   const submittedData = location.state?.locations || [];
   const { isLoaded } = useJsApiLoader({
@@ -21,38 +20,6 @@ function MyComponent() {
     googleMapsApiKey: "AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk"
   });
 
-  const listenToUser = async () => {
-    var speech = true;
-    var textConverted = "";
-  
-    // window.SpeechRecognition = window.webkitSpeechRecognition;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.interimResults = true;
-  
-    await new Promise((resolve) => { // Wrap the recognition logic in a Promise
-      recognition.addEventListener('result', (e) => {
-        const transcript = Array.from(e.results)
-          .map(result => result[0])
-          .map(result => result.transcript)
-          .join('');
-  
-        console.log(transcript);
-      });
-  
-      if (speech == true) {
-        recognition.start();
-      }
-  
-      setTimeout(() => {
-        recognition.stop();
-        console.log("Stopped!!!!!!!!!!!!!!");
-        console.log(textConverted);
-        resolve(); // Resolve the Promise when done
-      }, 3000);
-    });
-  };
-  
   const convertToSpeech = async (text) => {
     return new Promise((resolve) => {
       console.log('convertToSpeech start');
@@ -69,6 +36,54 @@ function MyComponent() {
     });
   };
 
+  const listenToUser = async () => {
+    setSpeechInputText(null);
+    var speech = true;
+    var textConverted = "";
+    setAnimation('listening');
+    // window.SpeechRecognition = window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.interimResults = true;
+  
+    await new Promise((resolve) => { // Wrap the recognition logic in a Promise
+      recognition.addEventListener('result', (e) => {
+        const transcript = Array.from(e.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        
+        // console.log(transcript);
+        textConverted = transcript;
+      });
+  
+      if (speech == true) {
+        recognition.start();
+      }
+  
+      setTimeout(() => {
+        recognition.stop();
+        console.log(textConverted);
+        setSpeechInputText(textConverted);
+        resolve(); // Resolve the Promise when done
+        console.log("Stopped!!!!!!!!!!!!!!");
+      }, 5000);
+    });
+  };
+
+  const checkCommand= async ()=>{
+    return new Promise((resolve)=>{
+      if(speechInputText.includes("Yes"))
+        convertToSpeech(`You will be now redirected to map with location ${currLocationName}`);
+      else if(speechInputText.includes("No")){
+        convertToSpeech(`Moving to Next Location`);
+        resolve();
+      }
+      else{
+        convertToSpeech(`we could not hear right command from you please say yes to set this location to the map or no to skip this location`)
+      }
+    })
+  }
   const renderMarkers = (locations, onClickCallback) => {
 
     return locations.map((location) => {
@@ -90,16 +105,18 @@ function MyComponent() {
 
   useEffect(() => {
     processLocationQueue();
-  }, [locationQueue, isProcessingNextLocation]);
+  }, [locationQueue]);
 
   const processLocationQueue = async () => {
     if (locationQueue.length > 0) {
       const { name, distance, rating } = locationQueue[0];
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       await convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars, do you want to add this location to your map?`);
+      setCurrLocationName(`${name}`);
       await listenToUser(); // Wait for listenToUser to complete
+      await checkCommand();
       setLocationQueue((prevQueue) => prevQueue.slice(1));
-      setIsProcessingNextLocation(true);
+      // setIsProcessingNextLocation(true);
     }
   };
 
@@ -246,7 +263,6 @@ function MyComponent() {
           </InfoWindow>
         )}
       </GoogleMap>
-      {/* <SpeechRecognitionComponent /> */}
       <div className="bottom">
         <div className="vertical">
           <img src="https://cdn-icons-png.flaticon.com/128/12320/12320298.png" alt="" />

@@ -21,14 +21,14 @@ export const MyProvider = ({ children }) => {
     const [selectedMarker, setSelectedMarker] = useState(null);
     const [animation, setAnimation] = useState(null);
     const [speechInputText, setSpeechInputText] = useState('');
-    const [isListening, setIsListening] = useState(false); 
+    const [currLocationName, setCurrLocationName] = useState(null);
     const [isProcessingNextLocation, setIsProcessingNextLocation] = useState(false);
 
   return (
     <MyContext.Provider
       value={{map,setMap,locationQueue,setLocationQueue,restaurant,setRestaurants,gyms,setGyms,park,setParks,hospital, setHospitals, parking, setParkings, cafe, setCafes, shopping_mall, setShopping_malls, gas_station, setGas_stations,
         // ... (other state variables)
-        userLocation,setUserLocation,selectedMarker,setSelectedMarker,animation,setAnimation,speechInputText,setSpeechInputText,isListening,setIsListening,isProcessingNextLocation,setIsProcessingNextLocation}}
+        userLocation,setUserLocation,selectedMarker,setSelectedMarker,animation,setAnimation,speechInputText,setSpeechInputText,isProcessingNextLocation,setIsProcessingNextLocation, currLocationName,setCurrLocationName}}
     >
       {children}
     </MyContext.Provider>
