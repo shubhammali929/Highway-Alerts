@@ -30,60 +30,67 @@ function MyComponent() {
       utterance.onend = () => {
         console.log('convertToSpeech end');
         setAnimation(null);
-        resolve(); // Resolve the promise
+        resolve(); // Resolve the promise after speech ends
       };
       window.speechSynthesis.speak(utterance);
     });
   };
 
-  const listenToUser = async () => {
-    setSpeechInputText(null);
-    var speech = true;
-    var textConverted = "";
-    setAnimation('listening');
-    // window.SpeechRecognition = window.webkitSpeechRecognition;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.interimResults = true;
+  const listenToUser = () => {
+    return new Promise((resolve) => {
+      setSpeechInputText(null);
+      var textConverted = "";
+      setAnimation('listening');
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.interimResults = true;
   
-    await new Promise((resolve) => { // Wrap the recognition logic in a Promise
       recognition.addEventListener('result', (e) => {
         const transcript = Array.from(e.results)
           .map(result => result[0])
           .map(result => result.transcript)
           .join('');
-        
-        // console.log(transcript);
+  
         textConverted = transcript;
       });
   
-      if (speech == true) {
-        recognition.start();
-      }
+      recognition.addEventListener('end', () => {
+        setAnimation(null);
+        setSpeechInputText(textConverted); // Update the speechInputText after the recognition ends
   
-      setTimeout(() => {
-        recognition.stop();
-        console.log(textConverted);
-        setSpeechInputText(textConverted);
-        resolve(); // Resolve the Promise when done
-        console.log("Stopped!!!!!!!!!!!!!!");
-      }, 5000);
+        if (textConverted.toLowerCase().includes("yes") || textConverted.toLowerCase().includes("no")) {
+          resolve(); // Resolve the Promise only when "yes" or "no" is detected
+        } else {
+          // Continue listening if the response is not "yes" or "no"
+          listenToUser().then(resolve);
+        }
+      });
+  
+      recognition.start();
     });
   };
+  
+  
 
-  const checkCommand= async ()=>{
-    return new Promise((resolve)=>{
-      if(speechInputText.includes("Yes"))
-        convertToSpeech(`You will be now redirected to map with location ${currLocationName}`);
-      else if(speechInputText.includes("No")){
-        convertToSpeech(`Moving to Next Location`);
-        resolve();
+  const checkCommand = async () => {
+    return new Promise((resolve) => {
+      const lowercasedInput = speechInputText.toLowerCase();
+      console.log(`comparing ${lowercasedInput}`);
+      
+      if (lowercasedInput.includes("yes")) {
+        convertToSpeech(`You will be now redirected to the map with location ${currLocationName}`);
+        resolve('yes');
+      } else if (lowercasedInput.includes("no")) {
+        convertToSpeech(`Moving to the Next Location`);
+        resolve('no');
+      } else {
+        convertToSpeech(`We could not hear the right command from you. Please say yes to set this location on the map or no to skip this location`);
+        resolve('Unknown');
       }
-      else{
-        convertToSpeech(`we could not hear right command from you please say yes to set this location to the map or no to skip this location`)
-      }
-    })
-  }
+    });
+  };
+  
+
   const renderMarkers = (locations, onClickCallback) => {
 
     return locations.map((location) => {
@@ -113,12 +120,21 @@ function MyComponent() {
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       await convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars, do you want to add this location to your map?`);
       setCurrLocationName(`${name}`);
+  
+      let userResponse = '';
       await listenToUser(); // Wait for listenToUser to complete
-      await checkCommand();
-      setLocationQueue((prevQueue) => prevQueue.slice(1));
-      // setIsProcessingNextLocation(true);
+      userResponse = await checkCommand();
+  
+      if (userResponse === 'yes') {
+        setLocationQueue((prevQueue) => prevQueue.slice(1));
+      } else if (userResponse === 'no') {
+        convertToSpeech(`Moving to Next Location`);
+        // Continue with the next location or any other logic
+      }
     }
   };
+  
+  
 
   const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
     const lat1 = point1.lat;
@@ -142,7 +158,7 @@ function MyComponent() {
   const fetchNearbyLocations = async (location, radius, keyword, rating) => {
     try {
       const response = await fetch(
-        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=AIzaSyBdX-NUL9qM2og-93MWzi_nzoNW0y_gzmk`
+        `http://localhost:3001/api/places?location=${location.lat},${location.lng}&radius=${radius}&keyword=${keyword}&key=${process.env.REACT_APP_PLACES_AND_MAP_API_KEY}`
       )
       const data = await response.json();
       console.log(`Fetched locations of type ${keyword} -->>`, data);

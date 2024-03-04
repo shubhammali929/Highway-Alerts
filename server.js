@@ -9,7 +9,7 @@ app.use(cors());
 app.get('/api/places', async (req, res) => {
   try {
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${new URLSearchParams(req.query)}&key=AIzaSyCEDPL-K9wz3yqfQ-WygYXm7lzgYpec8Yk`
+      `https://maps.googleapis.com/maps/api/place/nearbysearch/json?${new URLSearchParams(req.query)}&key=${process.env.REACT_APP_PLACES_AND_MAP_API_KEY}`
     );
     const data = await response.json();
     res.json(data);
