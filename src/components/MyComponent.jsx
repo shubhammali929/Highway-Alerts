@@ -129,6 +129,7 @@ function MyComponent() {
   }, [locationQueue]);
 
   const processLocationQueue = async () => {
+    console.log("USerLocation-->",userLocation.lat,"---",userLocation.lng);
     if (locationQueue.length > 0) {
       const { name, distance, rating } = locationQueue[0];
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
@@ -141,7 +142,7 @@ function MyComponent() {
   
       if (userResponse === 'yes') {
         convertToSpeech("Successfully moved to the next location...");
-        window.location.href = "https://maps.google.com"; 
+        window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${currLocationName}&travelmode=Driving`; 
       } else if (userResponse === 'no') {
         convertToSpeech(`Moving to Next Location`);
         setLocationQueue((prevQueue) => prevQueue.slice(1));
