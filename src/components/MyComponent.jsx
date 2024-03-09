@@ -37,11 +37,11 @@ function MyComponent() {
     });
   };
 
-  const listenToUser = () => {
-    return new Promise((resolve) => {
-      setSpeechInputText(null);
+  const listenToUser = async () => {
+    return new Promise(async (resolve) => {
+      setSpeechInputText("");
       setAnimation('listening');
-      console.log("listening started")
+      console.log("listening started");
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.interimResults = true;
@@ -57,53 +57,31 @@ function MyComponent() {
         console.log(transcript);
       });
   
-      // Stop recognition after 3 seconds
-      setTimeout(() => {
-        recognition.stop();
-  
+      recognition.addEventListener('end', async () => {
         setAnimation(null);
-        console.log("listening stopped!!!")
-        // Resolve the Promise only when "yes" or "no" is detected
-        // if (transcript.toLowerCase().includes("yes") || transcript.toLowerCase().includes("no")) {
+        console.log("listening stopped!!!");
+  
+        const lowercasedInput = transcript.toLowerCase();
+        console.log("speechInputText ->", transcript);
+        console.log(`loweredCase--> ${lowercasedInput}`);
+  
+        if (lowercasedInput.includes("yes")) {
+          await convertToSpeech(`You will now be redirected to the map with location ${currLocationName}`);
+          window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${currLocationName}&travelmode=Driving`;
+        } else if (lowercasedInput.includes("no")) {
+          await convertToSpeech(`Moving to the Next Location`);
           resolve();
-        // } else {
-          // Continue listening if the response is not "yes" or "no"
-          // listenToUser().then(resolve);
-        // }
-      }, 5000);
+        } else {
+          await convertToSpeech(`We could not hear the right command from you. Please say yes to set this location on the map or no to skip this location`);
+          await listenToUser(); // Listen again
+        }
+  
+        resolve();
+      });
   
       recognition.start();
     });
   };
-
-  
-
-  const checkCommand = async (attempts = 1) => {
-    return new Promise(async (resolve) => {
-      const lowercasedInput = speechInputText.toLowerCase();
-      console.log("sppechInputText ->",speechInputText)
-      console.log(`loweredCase--> ${lowercasedInput}`);
-      
-      if (lowercasedInput.includes("yes")) {
-        convertToSpeech(`You will be now redirected to the map with location ${currLocationName}`);
-        resolve('yes');
-      } else if (lowercasedInput.includes("no")) {
-        convertToSpeech(`Moving to the Next Location`);
-        resolve('no');
-      } else {
-        if (attempts < 2) {
-          convertToSpeech(`We could not hear the right command from you. Please say yes to set this location on the map or no to skip this location`);
-          await listenToUser(); // Listen again for one more attempt
-          resolve(await checkCommand(attempts + 1));
-        } else {
-          convertToSpeech(`Moving to Next Location`);
-          resolve('no');
-        }
-      }
-    });
-  };
-  
-  
 
   const renderMarkers = (locations, onClickCallback) => {
 
@@ -129,28 +107,19 @@ function MyComponent() {
   }, [locationQueue]);
 
   const processLocationQueue = async () => {
-    console.log("USerLocation-->",userLocation.lat,"---",userLocation.lng);
     if (locationQueue.length > 0) {
       const { name, distance, rating } = locationQueue[0];
       console.log(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars`);
       await convertToSpeech(`There is ${name} at the distance of ${distance.toFixed(2)} km having a rating of ${rating} stars, do you want to add this location to your map?`);
-      setCurrLocationName(`${name}`);
+      setCurrLocationName(name);
   
-      let userResponse = '';
-      await listenToUser(); // Wait for listenToUser to complete
-      userResponse = await checkCommand();
+      await listenToUser(); // Wait for user response
   
-      if (userResponse === 'yes') {
-        convertToSpeech("Successfully moved to the next location...");
-        window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${currLocationName}&travelmode=Driving`; 
-      } else if (userResponse === 'no') {
-        convertToSpeech(`Moving to Next Location`);
-        setLocationQueue((prevQueue) => prevQueue.slice(1));
-        // Continue with the next location or any other logic
-      }
+      // No need to check for user response here. listenToUser will handle redirection or moving to the next location.
+  
+      setLocationQueue((prevQueue) => prevQueue.slice(1));
     }
   };
-  
   
   
   const calculateDistance = (point1, point2) => {// Helper function to calculate distance between two points
