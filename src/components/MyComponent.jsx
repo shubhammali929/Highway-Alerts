@@ -68,6 +68,7 @@ function MyComponent() {
         if (lowercasedInput.includes("yes")) {
           await convertToSpeech(`You will now be redirected to the map with location ${currLocationName}`);
           window.location.href = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.lat},${userLocation.lng}&destination=${currLocationName}&travelmode=Driving`;
+          setLocationQueue([]);
         } else if (lowercasedInput.includes("no")) {
           await convertToSpeech(`Moving to the Next Location`);
           resolve();
@@ -114,8 +115,7 @@ function MyComponent() {
       setCurrLocationName(name);
   
       await listenToUser(); // Wait for user response
-  
-      // No need to check for user response here. listenToUser will handle redirection or moving to the next location.
+    
   
       setLocationQueue((prevQueue) => prevQueue.slice(1));
     }
